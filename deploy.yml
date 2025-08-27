@@ -1,0 +1,77 @@
+# .github/workflows/deploy.yml
+
+name: Deploy to Firebase
+
+on:
+  push:
+    branches:
+      - develop
+      - qa
+      - staging
+      - main
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    
+    # IMPORTANT: Replace these placeholder IDs with the output from Terraform
+    env:
+      PROJECT_ID_DEV: my-english-app-dev-xxxx
+      PROJECT_ID_QA: my-english-app-qa-xxxx
+      PROJECT_ID_STAGING: my-english-app-staging-xxxx
+      PROJECT_ID_PROD: my-english-app-prod-xxxx
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build
+
+      # Deploy to Development Environment
+      - name: Deploy to Dev
+        if: github.ref == 'refs/heads/develop'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_ENGLISH_APP_DEV }}'
+          channelId: live
+          projectId: ${{ env.PROJECT_ID_DEV }}
+
+      # Deploy to QA Environment
+      - name: Deploy to QA
+        if: github.ref == 'refs/heads/qa'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_ENGLISH_APP_QA }}'
+          channelId: live
+          projectId: ${{ env.PROJECT_ID_QA }}
+
+      # Deploy to Staging Environment
+      - name: Deploy to Staging
+        if: github.ref == 'refs/heads/staging'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_ENGLISH_APP_STAGING }}'
+          channelId: live
+          projectId: ${{ env.PROJECT_ID_STAGING }}
+
+      # Deploy to Production Environment
+      - name: Deploy to Production
+        if: github.ref == 'refs/heads/main'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT_MY_ENGLISH_APP_PROD }}'
+          channelId: live
+          projectId: ${{ env.PROJECT_ID_PROD }}
